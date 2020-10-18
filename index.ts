@@ -9,42 +9,42 @@ class Point {
     this.y = y
   }
 }
-const height = 300, width = 300
+const height = 100, width = Math.round(height * 16 / 9)
 let maze_container = document.getElementById("maze_container")
 let maze: { color: string, previous_node: Point, wall: boolean }[][] = []
 let source = { x: 0, y: 0 }
 let target = { x: 0, y: 0 }
-let table = document.createElement("tbody")
+
+var canvas: HTMLCanvasElement = document.getElementById('canvas') as HTMLCanvasElement;
+canvas.style.padding = "0px"
+var ctx = canvas.getContext('2d');
+ctx.canvas.width = window.innerWidth;
+ctx.canvas.height = window.innerHeight;
+let rect_width = ctx.canvas.width / width
+let rect_height = ctx.canvas.height / height
 const createMaze = () => {
   for (let x = 0; x < width; x++) {
     let inner: { color: string, previous_node: Point, wall: boolean }[] = []
     for (let y = 0; y < height; y++)
-      inner.push({ ...(Math.random() > .3 ? { color: "#fff", wall: false } : { color: "#000", wall: true }), previous_node: { x: - 1, y: -1 } })
+      inner.push({ ...(Math.random() > .4 ? { color: "#fff", wall: false } : { color: "#000", wall: true }), previous_node: { x: - 1, y: -1 } })
     maze.push(inner)
   }
 }
 
-const create_table = () => {
-  for (let y = 0; y < height; y++) {
-    let tr = document.createElement("tr") // <tr> </tr>
-    for (let x = 0; x < width; x++) {
-      const td = document.createElement("td")
-      tr.appendChild(td)
-    }
-    table.appendChild(tr)
-  }
-  maze_container.appendChild(table)
+const render_piece = async (x, y) => {
+  ctx.fillStyle = maze[x][y].color
+  ctx.fillRect(rect_width * x, rect_height * y, rect_width, rect_height)
 }
 
 const render = async () => {
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
-      if (maze[x][y].color)
-        (table.children[y].children[x] as HTMLTableDataCellElement).style.backgroundColor = maze[x][y].color
       if (x === source.x && y === source.y)
-        (table.children[y].children[x] as HTMLTableDataCellElement).style.backgroundColor = "green"
+        ctx.fillStyle = maze[x][y].color = "green"
       if (x === target.x && y === target.y)
-        (table.children[y].children[x] as HTMLTableDataCellElement).style.backgroundColor = "red"
+        ctx.fillStyle = maze[x][y].color = "red"
+      ctx.fillStyle = maze[x][y].color
+      ctx.fillRect(rect_width * x, rect_height * y, rect_width, rect_height)
     }
   }
 }
@@ -83,27 +83,27 @@ const depth_first_search_rec = async (pos: Point, visited: Point[]) => {
     maze[pos.x][pos.y].color = "#45f"
   else return false
   if (pos.x === target.x && pos.y === target.y) { console.log(pos); return true }
-  //await sleep(0)
-  //await render()
+  await sleep(0)
+  await render_piece(pos.x, pos.y)
   for (let x = -1; x < 2; x += 2)
     if (!maze?.[pos.x + x]?.[pos.y]?.wall)
       if (await depth_first_search_rec({ x: pos.x + x, y: pos.y }, visited)) {
         maze[pos.x][pos.y].color = "#4a7"
-        //await sleep(0)
-        //await render()
+        await sleep(0)
+        await render_piece(pos.x, pos.y)
         return true
       }
   for (let y = -1; y < 2; y += 2)
     if (!maze?.[pos.x]?.[pos.y + y]?.wall)
       if (await depth_first_search_rec({ x: pos.x, y: pos.y + y }, visited)) {
         maze[pos.x][pos.y].color = "#4a7"
-        //await sleep(0)
-        //await render()
+        await sleep(0)
+        await render_piece(pos.x, pos.y)
         return true
       }
 
-  //await render()
-  //await sleep(0)
+  await render()
+  await sleep(0)
   return false
 
 }
@@ -138,18 +138,17 @@ const breadth_first_search = async () => {
       queue.push({ x: temp.x, y: temp.y + 1, prev: { x: temp.x, y: temp.y } })
     if (!maze?.[temp.x]?.[temp.y - 1]?.wall)
       queue.push({ x: temp.x, y: temp.y - 1, prev: { x: temp.x, y: temp.y } })
-    //await sleep(0)
-    //await render()
+    await sleep(0)
+    await render_piece(temp.x, temp.y)
   }
   let current = maze[target.x][target.y]
   while (current.previous_node.x != -1) {
-    if (maze?.[current.previous_node.x]?.[current.previous_node.y])
+    if (maze?.[current.previous_node.x]?.[current.previous_node.y]) {
       maze[current.previous_node.x][current.previous_node.y].color = "#4a5"
+      await render_piece(current.previous_node.x, current.previous_node.y)
+    }
     current = maze[current.previous_node.x][current.previous_node.y]
-    //await sleep(0)
-    //await render()
   }
-  await sleep(0)
   await render()
 }
 
@@ -175,7 +174,7 @@ const a_star = async () => {
     if (inArray(visited, temp) || !maze?.[temp.x]?.[temp.y]) continue
     visited.push(temp)
 
-    maze[temp.x][temp.y].color = "#45f"
+    maze[temp.x][temp.y].color = "#4455" + (Math.round(temp.dist / (height + width) * 255)).toString(16).padStart(2, "0")
     maze[temp.x][temp.y].previous_node = temp.prev
     if (temp.x == target.x && temp.y == target.y) {
       break
@@ -189,21 +188,21 @@ const a_star = async () => {
     if (!maze?.[temp.x]?.[temp.y - 1]?.wall)
       insert_in_place(queue, ({ x: temp.x, y: temp.y - 1, prev: { x: temp.x, y: temp.y }, dist: Math.abs(target.x - temp.x) + Math.abs(target.y - temp.y - 1) }))
 
-    //await sleep(0)
-    //await render()
+    await sleep(0)
+    await render_piece(temp.x, temp.y)
   }
   let current = maze[target.x][target.y]
   while (current.previous_node.x != -1) {
-    if (maze?.[current.previous_node.x]?.[current.previous_node.y])
+    if (maze?.[current.previous_node.x]?.[current.previous_node.y]) {
       maze[current.previous_node.x][current.previous_node.y].color = "#4a5"
+      await render_piece(current.previous_node.x, current.previous_node.y)
+    }
     current = maze[current.previous_node.x][current.previous_node.y]
   }
   await sleep(0)
   await render()
 }
-
-create_table()
 createMaze()
 selectPositions()
 render()
-breadth_first_search()
+a_star()
