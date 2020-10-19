@@ -9,7 +9,8 @@ class Point {
     this.y = y
   }
 }
-const height = 100, width = Math.round(height * 16 / 9)
+const height = 50, width = Math.round(height * window.innerWidth / window.innerHeight)
+
 let maze_container = document.getElementById("maze_container")
 let maze: { color: string, previous_node: Point, wall: boolean }[][] = []
 let source = { x: 0, y: 0 }
@@ -26,25 +27,21 @@ const createMaze = () => {
   for (let x = 0; x < width; x++) {
     let inner: { color: string, previous_node: Point, wall: boolean }[] = []
     for (let y = 0; y < height; y++)
-      inner.push({ ...(Math.random() > .4 ? { color: "#fff", wall: false } : { color: "#000", wall: true }), previous_node: { x: - 1, y: -1 } })
+      inner.push({ ...(Math.random() > .3 ? { color: "#fff", wall: false } : { color: "#000", wall: true }), previous_node: { x: - 1, y: -1 } })
     maze.push(inner)
   }
 }
 
 const render_piece = async (x, y) => {
+  maze[source.x][source.y].color = "green"
   ctx.fillStyle = maze[x][y].color
-  ctx.fillRect(rect_width * x, rect_height * y, rect_width, rect_height)
+  ctx.fillRect(rect_width * x - 1, rect_height * y - 1, rect_width + 2, rect_height + 2)
 }
 
 const render = async () => {
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
-      if (x === source.x && y === source.y)
-        ctx.fillStyle = maze[x][y].color = "green"
-      if (x === target.x && y === target.y)
-        ctx.fillStyle = maze[x][y].color = "red"
-      ctx.fillStyle = maze[x][y].color
-      ctx.fillRect(rect_width * x, rect_height * y, rect_width, rect_height)
+      render_piece(x, y)
     }
   }
 }
@@ -69,6 +66,8 @@ const selectPositions = () => {
       x: Math.round(Math.random() * width / 10 + 9 * width / 10 - 1),
       y: Math.round(Math.random() * height / 10 + 9 * height / 10 - 1),
     }
+  ctx.fillStyle = maze[source.x][source.y].color = "green"
+  ctx.fillStyle = maze[target.x][target.y].color = "red"
 }
 
 
