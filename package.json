@@ -1,0 +1,23 @@
+{
+  "name": "path-finding",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Unn4m3DD/path-finding.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Unn4m3DD/path-finding/issues"
+  },
+  "homepage": "https://github.com/Unn4m3DD/path-finding#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
