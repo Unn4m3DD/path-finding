@@ -9,8 +9,13 @@ class Point {
     this.y = y
   }
 }
-const height = 50, width = Math.round(height * window.innerWidth / window.innerHeight)
-
+let generating = false;
+const inArray = (array: Point[], point: Point) => {
+  for (let p of array) if (p.x == point.x && p.y == point.y) return true
+}
+const height = 51
+let width = Math.round(height * window.innerWidth / window.innerHeight)
+if (width % 2 == 0) width++;
 let maze_container = document.getElementById("maze_container")
 let maze: { color: string, previous_node: Point, wall: boolean }[][] = []
 let source = { x: 0, y: 0 }
@@ -23,13 +28,50 @@ ctx.canvas.width = window.innerWidth;
 ctx.canvas.height = window.innerHeight;
 let rect_width = ctx.canvas.width / width
 let rect_height = ctx.canvas.height / height
-const createMaze = () => {
+
+
+const createRandomMaze = () => {
   maze = []
   for (let x = 0; x < width; x++) {
     let inner: { color: string, previous_node: Point, wall: boolean }[] = []
     for (let y = 0; y < height; y++)
       inner.push({ ...(Math.random() > .3 ? { color: "#fff", wall: false } : { color: "#000", wall: true }), previous_node: { x: - 1, y: -1 } })
     maze.push(inner)
+  }
+}
+const createMaze = async () => {
+  maze = []
+  for (let x = 0; x < width; x++) {
+    let inner: { color: string, previous_node: Point, wall: boolean }[] = []
+    for (let y = 0; y < height; y++)
+      inner.push({
+        ...(((x % 2) == 0 || (y % 2) == 0) ? { color: "#000", wall: true } : { color: "#fff", wall: false }), previous_node: { x: - 1, y: -1 }
+      })
+    maze.push(inner)
+  }
+  let start_pos = new Point(1, 1);
+  let stack = [start_pos];
+  let visited = []
+  while (stack.length != 0) {
+    let current_pos = stack.pop();
+    let pool = [new Point(1, 0), new Point(-1, 0), new Point(0, -1), new Point(0, 1)]
+    while (pool.length > 0) {
+      console.log(pool)
+      const dir = Math.floor(Math.random() * pool.length)
+      let choice = pool[dir]
+      pool.splice(dir, 1)
+      const new_position = new Point(current_pos.x + choice.x * 2, current_pos.y + choice.y * 2);
+      if (
+        0 < new_position.x && new_position.x < width - 1 &&
+        0 < new_position.y && new_position.y < height - 1 &&
+        !inArray(visited, new_position)) {
+        maze[current_pos.x + choice.x][current_pos.y + choice.y] = { color: "#fff", wall: false, previous_node: { x: - 1, y: -1 } }
+        stack.push(new_position)
+        visited.push(new_position)
+      }
+    }
+    await render();
+    await sleep(0)
   }
 }
 
@@ -74,9 +116,7 @@ const selectPositions = () => {
 
 
 const depth_first_search_rec = async (pos: Point, visited: Point[]) => {
-  const inArray = (array: Point[], point: Point) => {
-    for (let p of array) if (p.x == point.x && p.y == point.y) return true
-  }
+
   if (inArray(visited, pos))
     return false
   visited.push(pos)
@@ -203,9 +243,20 @@ const a_star = async () => {
   await sleep(0)
   await render()
 }
-const generate_new_map = () => {
-  createMaze()
+const generate_maze = async () => {
+  if (generating) return
+  generating = true
+  await createMaze()
   selectPositions()
   render()
+  generating = false
 }
-generate_new_map()
+const generate_random_map = async () => {
+  if (generating) return
+  generating = true
+  await createRandomMaze()
+  selectPositions()
+  render()
+  generating = false
+}
+generate_maze()

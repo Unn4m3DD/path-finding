@@ -1,4 +1,4 @@
 {
-  "setup": "npm i",
-  "run": "node index.js"
+  "setup": "",
+  "run": "&& http-server -p $PORT ."
 }
