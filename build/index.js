@@ -122,31 +122,31 @@ const createMaze2 = async () => {
             if (!inArray(not_included, { x, y: v_middle }))
                 maze[x][v_middle] = { color: "#000", wall: true, previous_node: { x: -1, y: -1 } };
             await render_piece(x, v_middle);
-            await sleep(0);
+            await sleep(30);
         }
         for (let y = Math.floor(y_begin); y < y_end; y++) {
             if (!inArray(not_included, { x: h_middle, y }))
                 maze[h_middle][y] = { color: "#000", wall: true, previous_node: { x: -1, y: -1 } };
             await render_piece(h_middle, y);
-            await sleep(0);
+            await sleep(30);
         }
         if (not_recursive)
             return;
-        await recursive_paint(x_begin, h_middle, y_begin, v_middle, parity_check);
-        await recursive_paint(x_begin, h_middle, v_middle, y_end, parity_check);
-        await recursive_paint(h_middle, x_end, y_begin, v_middle, parity_check);
-        await recursive_paint(h_middle, x_end, v_middle, y_end, parity_check);
+        recursive_paint(x_begin, h_middle, y_begin, v_middle, parity_check);
+        recursive_paint(x_begin, h_middle, v_middle, y_end, parity_check);
+        recursive_paint(h_middle, x_end, y_begin, v_middle, parity_check);
+        recursive_paint(h_middle, x_end, v_middle, y_end, parity_check);
     };
     await render();
     await sleep(0);
-    await recursive_paint(0, Math.floor(width / 2), 0, height - 1, 0, false);
-    await recursive_paint(Math.floor(width / 2), width - 1, 0, height - 1, 1, false);
+    recursive_paint(0, Math.floor(width / 2), 0, height - 1, 0, false);
+    recursive_paint(Math.floor(width / 2), width - 1, 0, height - 1, 1, false);
     return;
 };
 const render_piece = async (x, y) => {
     maze[source.x][source.y].color = "green";
     ctx.fillStyle = maze[x][y].color;
-    ctx.fillRect(rect_width * x, rect_height * y, rect_width, rect_height);
+    ctx.fillRect(rect_width * x - .05, rect_height * y - .05, rect_width + .1, rect_height + .1);
 };
 const render = async () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height); //clear html5 canvas
