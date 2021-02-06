@@ -97,18 +97,13 @@ const createMaze2 = async () => {
         const v_middle = Math.floor((y_end + y_begin) / 2);
         if (x_end - x_begin < 3 || y_end - y_begin < 3)
             return;
-        for (let x = Math.floor(x_begin); x < x_end; x++) {
-            maze[x][v_middle] = { color: "#000", wall: true, previous_node: { x: -1, y: -1 } };
-        }
-        for (let y = Math.floor(y_begin); y < y_end; y++) {
-            maze[h_middle][y] = { color: "#000", wall: true, previous_node: { x: -1, y: -1 } };
-        }
         let pool = [
             { x: [h_middle, h_middle], y: [y_begin + 1, v_middle - 1] },
             { x: [h_middle, h_middle], y: [v_middle + 1, y_end] },
             { x: [x_begin + 1, h_middle - 1], y: [v_middle, v_middle] },
             { x: [h_middle + 1, x_end], y: [v_middle, v_middle] },
         ];
+        let not_included = [];
         for (let i = 0; i < 3; i++) {
             let choice = Math.floor(Math.random() * pool.length);
             let range = pool[choice];
@@ -121,7 +116,19 @@ const createMaze2 = async () => {
                 point.x++;
             if (point.y != v_middle && (point.y) % 2 == 0)
                 point.y++;
-            maze[point.x][point.y] = { color: "#fff", wall: false, previous_node: { x: -1, y: -1 } };
+            not_included.push(point);
+        }
+        for (let x = Math.floor(x_begin); x < x_end; x++) {
+            if (!inArray(not_included, { x, y: v_middle }))
+                maze[x][v_middle] = { color: "#000", wall: true, previous_node: { x: -1, y: -1 } };
+            await render_piece(x, v_middle);
+            await sleep(0);
+        }
+        for (let y = Math.floor(y_begin); y < y_end; y++) {
+            if (!inArray(not_included, { x: h_middle, y }))
+                maze[h_middle][y] = { color: "#000", wall: true, previous_node: { x: -1, y: -1 } };
+            await render_piece(h_middle, y);
+            await sleep(0);
         }
         if (not_recursive)
             return;
@@ -130,6 +137,8 @@ const createMaze2 = async () => {
         await recursive_paint(h_middle, x_end, y_begin, v_middle, parity_check);
         await recursive_paint(h_middle, x_end, v_middle, y_end, parity_check);
     };
+    await render();
+    await sleep(0);
     await recursive_paint(0, Math.floor(width / 2), 0, height - 1, 0, false);
     await recursive_paint(Math.floor(width / 2), width - 1, 0, height - 1, 1, false);
     return;
@@ -137,7 +146,7 @@ const createMaze2 = async () => {
 const render_piece = async (x, y) => {
     maze[source.x][source.y].color = "green";
     ctx.fillStyle = maze[x][y].color;
-    ctx.fillRect(rect_width * x - 1, rect_height * y - 1, rect_width + 2, rect_height + 2);
+    ctx.fillRect(rect_width * x, rect_height * y, rect_width, rect_height);
 };
 const render = async () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height); //clear html5 canvas
