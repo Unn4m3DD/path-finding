@@ -13,9 +13,11 @@ let generating = false;
 const inArray = (array: Point[], point: Point) => {
   for (let p of array) if (p.x == point.x && p.y == point.y) return true
 }
-const height = 51
-let width = Math.round(height * window.innerWidth / window.innerHeight)
-if (width % 2 == 0) width++;
+const height = 64 + 1
+const width = 128 + 2
+//let width = Math.round(height * window.innerWidth / window.innerHeight)
+//
+//if (width % 2 == 0) width++;
 let maze_container = document.getElementById("maze_container")
 let maze: { color: string, previous_node: Point, wall: boolean }[][] = []
 let source = { x: 0, y: 0 }
@@ -23,9 +25,11 @@ let target = { x: 0, y: 0 }
 
 var canvas: HTMLCanvasElement = document.getElementById('canvas') as HTMLCanvasElement;
 canvas.style.padding = "0px"
+canvas.style.height = "" + (32 * window.innerWidth / 64 - 200);
+canvas.style.width = "" + window.innerWidth * .9;
 var ctx = canvas.getContext('2d');
-ctx.canvas.width = window.innerWidth;
-ctx.canvas.height = window.innerHeight;
+ctx.canvas.width = window.innerHeight * .9;
+ctx.canvas.height = 32 * window.innerHeight / 64 - 200;
 let rect_width = ctx.canvas.width / width
 let rect_height = ctx.canvas.height / height
 
@@ -39,7 +43,7 @@ const createRandomMaze = () => {
     maze.push(inner)
   }
 }
-const createMaze = async () => {
+const createMaze1 = async () => {
   maze = []
   for (let x = 0; x < width; x++) {
     let inner: { color: string, previous_node: Point, wall: boolean }[] = []
@@ -73,6 +77,77 @@ const createMaze = async () => {
     await render();
     await sleep(0)
   }
+}
+
+
+const createMaze2 = async () => {
+  maze = []
+  for (let x = 0; x < width; x++) {
+    let inner: { color: string, previous_node: Point, wall: boolean }[] = []
+    for (let y = 0; y < height; y++)
+      inner.push({
+        color: "#fff", wall: false, previous_node: { x: - 1, y: -1 }
+      })
+    maze.push(inner)
+  }
+
+  for (let x = 0; x < width; x++) {
+    maze[x][0] = { color: "#000", wall: true, previous_node: { x: - 1, y: -1 } }
+    maze[x][height - 1] = { color: "#000", wall: true, previous_node: { x: - 1, y: -1 } }
+  }
+  for (let y = 0; y < height; y++) {
+    maze[0][y] = { color: "#000", wall: true, previous_node: { x: - 1, y: -1 } }
+    maze[width - 1][y] = { color: "#000", wall: true, previous_node: { x: - 1, y: -1 } }
+  }
+
+  const recursive_paint = async (
+    x_begin: number, x_end: number,
+    y_begin: number, y_end: number,
+    parity_check: number, not_recursive?: boolean
+  ) => {
+    const h_middle = Math.floor((x_end + x_begin) / 2)
+    const v_middle = Math.floor((y_end + y_begin) / 2)
+    if (x_end - x_begin < 3 || y_end - y_begin < 3) return
+
+    for (let x = Math.floor(x_begin); x < x_end; x++) {
+      maze[x][v_middle] = { color: "#000", wall: true, previous_node: { x: - 1, y: -1 } }
+
+    }
+
+    for (let y = Math.floor(y_begin); y < y_end; y++) {
+      maze[h_middle][y] = { color: "#000", wall: true, previous_node: { x: - 1, y: -1 } }
+
+    }
+
+    let pool = [
+      { x: [h_middle, h_middle], y: [y_begin + 1, v_middle - 1] },
+      { x: [h_middle, h_middle], y: [v_middle + 1, y_end] },
+      { x: [x_begin + 1, h_middle - 1], y: [v_middle, v_middle] },
+      { x: [h_middle + 1, x_end], y: [v_middle, v_middle] },
+    ]
+
+    for (let i = 0; i < 3; i++) {
+      let choice = Math.floor(Math.random() * pool.length);
+      let range = pool[choice]
+      pool.splice(choice, 1);
+      let point = {
+        x: Math.floor(Math.random() * (range.x[1] - range.x[0]) + range.x[0]),
+        y: Math.floor(Math.random() * (range.y[1] - range.y[0]) + range.y[0])
+      }
+      if (point.x != h_middle && (point.x + parity_check) % 2 == 0) point.x++;
+      if (point.y != v_middle && (point.y) % 2 == 0) point.y++;
+      maze[point.x][point.y] = { color: "#fff", wall: false, previous_node: { x: - 1, y: -1 } }
+
+    }
+    if (not_recursive) return
+    await recursive_paint(x_begin, h_middle, y_begin, v_middle, parity_check)
+    await recursive_paint(x_begin, h_middle, v_middle, y_end, parity_check)
+    await recursive_paint(h_middle, x_end, y_begin, v_middle, parity_check)
+    await recursive_paint(h_middle, x_end, v_middle, y_end, parity_check)
+  }
+  await recursive_paint(0, Math.floor(width / 2), 0, height - 1, 0, false);
+  await recursive_paint(Math.floor(width / 2), width - 1, 0, height - 1, 1, false);
+  return
 }
 
 const render_piece = async (x, y) => {
@@ -246,7 +321,7 @@ const a_star = async () => {
 const generate_maze = async () => {
   if (generating) return
   generating = true
-  await createMaze()
+  await createMaze1()
   selectPositions()
   render()
   generating = false
@@ -255,8 +330,17 @@ const generate_random_map = async () => {
   if (generating) return
   generating = true
   await createRandomMaze()
-  selectPositions()
-  render()
+  await selectPositions()
+  await render()
   generating = false
 }
-generate_maze()
+const generate_hard_maze = async () => {
+  if (generating) return
+  generating = true
+  await createMaze2()
+  await selectPositions()
+  await render()
+  generating = false
+}
+
+generate_hard_maze()
