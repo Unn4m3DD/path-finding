@@ -143,15 +143,20 @@ const createMaze2 = async () => {
     }
 
     if (not_recursive) return
-    recursive_paint(x_begin, h_middle, y_begin, v_middle, parity_check)
-    recursive_paint(x_begin, h_middle, v_middle, y_end, parity_check)
-    recursive_paint(h_middle, x_end, y_begin, v_middle, parity_check)
-    recursive_paint(h_middle, x_end, v_middle, y_end, parity_check)
+
+    await Promise.all([
+      recursive_paint(x_begin, h_middle, y_begin, v_middle, parity_check),
+      recursive_paint(x_begin, h_middle, v_middle, y_end, parity_check),
+      recursive_paint(h_middle, x_end, y_begin, v_middle, parity_check),
+      recursive_paint(h_middle, x_end, v_middle, y_end, parity_check)
+    ])
   }
   await render();
   await sleep(0);
-  recursive_paint(0, Math.floor(width / 2), 0, height - 1, 0, false);
-  recursive_paint(Math.floor(width / 2), width - 1, 0, height - 1, 1, false);
+  await Promise.all([
+    recursive_paint(0, Math.floor(width / 2), 0, height - 1, 0, false),
+    recursive_paint(Math.floor(width / 2), width - 1, 0, height - 1, 1, false)
+  ])
   return
 }
 
