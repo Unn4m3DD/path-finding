@@ -1,4 +1,6 @@
 {
   "setup": "",
-  "run": "&& http-server -p $PORT ."
+  "run": "&& http-server -p $PORT .",
+  "title": "Path Finding Algorithms",
+  "subtitle": "Demo of path finding algorithms in js using canvas"
 }
