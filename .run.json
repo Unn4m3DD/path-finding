@@ -3,5 +3,5 @@
   "run": "&& http-server -p $PORT .",
   "title": "Path Finding Algorithms",
   "subtitle": "Demo of path finding algorithms in js using canvas",
-  "image": "https://raw.githubusercontent.com/Unn4m3DD/path-finding/master/demo.gif"
+  "video": "https://raw.githubusercontent.com/Unn4m3DD/path-finding/master/demo.mp4"
 }
